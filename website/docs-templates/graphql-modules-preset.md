@@ -68,3 +68,26 @@ export const resolvers: MyModule.Resolvers = {
 ## Using without GraphQL-Modules
 
 By default, this preset it generating code for `graphql-modules`, but if you are not using it, you can set `useGraphQLModules: false` in your preset configuration to generate fully agnostic types that are based on folder structure only.
+
+## Using with Federation
+
+For proper type generation for Federation Entities you can set `federation: true` at `presetConfig` and `typescript-resolvers`
+
+```yaml
+schema: './src/modules/**/typedefs/*.graphql'
+generates:
+  ./server/src/modules/:
+    preset: graphql-modules
+    presetConfig:
+      baseTypesPath: ../generated-types/graphql.ts # Where to create the complete schema types
+      filename: generated-types/module-types.ts # Where to create each module types
+      federation: true
+    plugins:
+      - add:
+          content: '/* eslint-disable */'
+      - typescript
+      - typescript-resolvers:
+          federation: true # Important!
+```
+
+After this change, plugin will pick `__resolveReference` field for types with `@key` firective

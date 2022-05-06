@@ -139,4 +139,33 @@ describe('Integration', () => {
     expect(output.length).toBe(5);
     expect(output[3].content).toMatchSnapshot();
   });
+
+  test('should allow to enable federation', async () => {
+    const output = await executeCodegen({
+      generates: {
+        './tests/federation-test-files/modules': {
+          schema: './tests/federation-test-files/modules/*/types/*.graphql',
+          plugins: [
+            { typescript: {} },
+            {
+              'typescript-resolvers': {
+                federation: true,
+              },
+            },
+          ],
+          preset: 'graphql-modules',
+          presetConfig: {
+            baseTypesPath: 'global-types.ts',
+            filename: 'module-types.ts',
+            encapsulateModuleTypes: 'none',
+            federation: true,
+          },
+        },
+      },
+    });
+
+    for (const record of output) {
+      expect(record.content).toContain(`__resolveReference`);
+    }
+  });
 });

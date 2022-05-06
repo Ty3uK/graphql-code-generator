@@ -9,6 +9,7 @@ import { BaseVisitor, getConfigValue } from '@graphql-codegen/visitor-plugin-com
 export const preset: Types.OutputPreset<ModulesConfig> = {
   buildGeneratesSection: options => {
     const useGraphQLModules = getConfigValue(options?.presetConfig.useGraphQLModules, true);
+    const federation = getConfigValue(options?.presetConfig.federation, false);
     const { baseOutputDir } = options;
     const { baseTypesPath, encapsulateModuleTypes } = options.presetConfig;
 
@@ -106,6 +107,7 @@ export const preset: Types.OutputPreset<ModulesConfig> = {
                 schema,
                 baseVisitor,
                 useGraphQLModules,
+                federation,
                 rootTypes: [
                   schema.getQueryType()?.name,
                   schema.getMutationType()?.name,

@@ -91,4 +91,14 @@ export type ModulesConfig = {
    * If you are not using GraphQL-Modules, you can disable this feature by setting this to `false`.
    */
   useGraphQLModules?: boolean;
+  /**
+   * @name federation
+   * @type boolean
+   * @default false
+   * @description By default, the generated resolvers types will omit __resolveReference field.
+   *
+   * If you are using Federation, you can enable this feature by setting this to `true`.
+   * Also, you must set `federation: true` at typescript-resolvers plugin configuration.
+   */
+  federation?: boolean;
 };

@@ -5,6 +5,7 @@ import {
   InputValueDefinitionNode,
   Kind,
   NamedTypeNode,
+  TypeDefinitionNode,
   TypeNode,
 } from 'graphql';
 import { Source } from '@graphql-tools/utils';
@@ -214,4 +215,8 @@ export function createObject<K extends string, T>(keys: K[], valueFn: (key: K) =
   });
 
   return obj;
+}
+
+export function hasKeyDirective(node: TypeDefinitionNode) {
+  return node.directives.some(directive => directive.name.value === 'key');
 }

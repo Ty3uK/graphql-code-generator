@@ -26,6 +26,7 @@ import {
   createObject,
   collectUsedTypes,
   indent,
+  hasKeyDirective,
 } from './utils';
 import { ModulesConfig } from './config';
 import { BaseVisitor } from '@graphql-codegen/visitor-plugin-common';
@@ -47,6 +48,7 @@ export function buildModule(
     schema,
     baseVisitor,
     useGraphQLModules,
+    federation,
   }: {
     importNamespace: string;
     importPath: string;
@@ -56,11 +58,13 @@ export function buildModule(
     baseVisitor: BaseVisitor;
     schema?: GraphQLSchema;
     useGraphQLModules: boolean;
+    federation?: boolean;
   }
 ): string {
   const picks: Record<RegistryKeys, Record<string, string[]>> = createObject(registryKeys, () => ({}));
   const defined: Registry = createObject(registryKeys, () => []);
   const extended: Registry = createObject(registryKeys, () => []);
+  const federationEntities = [];
 
   // List of types used in objects, fields, arguments etc
   const usedTypes = collectUsedTypes(doc);
@@ -206,13 +210,16 @@ export function buildModule(
   function printResolveSignaturesPerType(registry: Registry) {
     return [
       [...registry.objects, ...registry.interfaces]
-        .map(name =>
-          printResolverType(
-            name,
-            'DefinedFields',
-            !rootTypes.includes(name) && defined.objects.includes(name) ? ` | '__isTypeOf'` : ''
-          )
-        )
+        .map(name => {
+          const extraFields = [
+            !rootTypes.includes(name) && defined.objects.includes(name) && ` | '__isTypeOf'`,
+            federation && federationEntities.includes(name) && ` | '__resolveReference'`,
+          ]
+            .filter(Boolean)
+            .join('');
+
+          return printResolverType(name, 'DefinedFields', extraFields);
+        })
         .join('\n'),
     ].join('\n');
   }
@@ -397,6 +404,11 @@ export function buildModule(
       case Kind.OBJECT_TYPE_DEFINITION: {
         defined.objects.push(name);
         collectFields(node, picks.objects);
+
+        if (federation && hasKeyDirective(node)) {
+          federationEntities.push(name);
+        }
+
         break;
       }
 

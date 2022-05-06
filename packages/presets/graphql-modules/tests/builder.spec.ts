@@ -46,6 +46,13 @@ const testDoc = parse(/* GraphQL */ `
   }
 `);
 
+const federationTestDoc = parse(/* GraphQL */ `
+  type User @key(fields: "id") {
+    id: ID!
+    fullName: String!
+  }
+`);
+
 const baseVisitor = new BaseVisitor({}, {});
 
 test('should generate interface field resolvers', () => {
@@ -444,4 +451,38 @@ test('should generate a signature for ResolveMiddleware (with widlcards)', () =>
       };
     };
   `);
+});
+
+test('should not pick __resolveReference field with `federation: false`', () => {
+  const output = buildModule('test', federationTestDoc, {
+    importPath: '../types',
+    importNamespace: 'core',
+    encapsulate: 'none',
+    shouldDeclare: false,
+    rootTypes: ROOT_TYPES,
+    baseVisitor,
+    useGraphQLModules: true,
+    federation: false,
+  });
+
+  expect(output).not.toContain(
+    `export type UserResolvers = Pick<core.UserResolvers, DefinedFields['User'] | '__isTypeOf' | '__resolveReference'>;`
+  );
+});
+
+test('should pick __resolveReference field with `federation: true`', () => {
+  const output = buildModule('test', federationTestDoc, {
+    importPath: '../types',
+    importNamespace: 'core',
+    encapsulate: 'none',
+    shouldDeclare: false,
+    rootTypes: ROOT_TYPES,
+    baseVisitor,
+    useGraphQLModules: true,
+    federation: true,
+  });
+
+  expect(output).toContain(
+    `export type UserResolvers = Pick<core.UserResolvers, DefinedFields['User'] | '__isTypeOf' | '__resolveReference'>;`
+  );
 });
